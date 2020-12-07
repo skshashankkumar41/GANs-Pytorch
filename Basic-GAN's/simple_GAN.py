@@ -1,1 +1,0 @@
-# Simple Gan Implementation
