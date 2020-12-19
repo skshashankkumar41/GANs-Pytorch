@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 from generator import Generator
 from discriminator import Discriminator
-from utils import noise_generator
+from utils import noise_generator,show_tensor_images    
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -42,7 +42,11 @@ def generator_loss(generator,discriminator,criterion,num_images,z_dim):
     return gen_fake_loss
 
 def train(n_epochs=200,batch_size=128,lr=0.00001,z_dim=64):
+    cur_step = 0
+    display_step = 500
     criterion = nn.BCEWithLogitsLoss()
+    mean_discriminator_loss = 0
+    mean_generator_loss = 0
     # generator model with optimizer
     generator = Generator(z_dim).to(device)
     generator_opt = torch.optim.Adam(generator.parameters(),lr=lr)
@@ -50,6 +54,56 @@ def train(n_epochs=200,batch_size=128,lr=0.00001,z_dim=64):
     # discriminator model with optimizer
     discriminator = Discriminator().to_device()
     discriminator_opt = torch.optim.Adam(discriminator.parameters(),lr=lr)
+
+    dataloader = get_dataloader(batch_size)
+    
+    for epoch in n_epochs:
+        for real, _ in dataloader:
+            cur_batch_size = len(real)
+            
+            # Flatten the batch of real images from the dataset
+            real = real.view(cur_batch_size, -1).to(device)
+
+            # Zero out the gradients before backpropagation
+            discriminator_opt.zero_grad()
+
+            # Calculate discriminator loss
+            disc_loss = discriminator_loss(generator, discriminator, criterion, real, cur_batch_size, z_dim)
+
+            # Update gradients
+            disc_loss.backward(retain_graph=True)
+
+            # Update optimizer
+            discriminator_opt.step()
+            
+            # Zero out the gradients before backpropagation
+            generator_opt.zero_grad()
+            
+            # Calculate generator loss
+            gen_loss = generator_loss(gen, disc, criterion, cur_batch_size, z_dim)
+            
+            # Update gradients
+            gen_loss.backward(retain_graph=True)
+            
+            # Update optimizer
+            gen_opt.step()
+
+             # Keep track of the average discriminator loss
+            mean_discriminator_loss += disc_loss.item() / display_step
+
+            # Keep track of the average generator loss
+            mean_generator_loss += gen_loss.item() / display_step
+
+            if cur_step % display_step == 0 and cur_step > 0:
+                print(f"Epoch {epoch}, step {cur_step}: Generator loss: {mean_generator_loss}, discriminator loss: {mean_discriminator_loss}")
+                fake_noise = get_noise(cur_batch_size, z_dim, device=device)
+                fake = gen(fake_noise)
+                show_tensor_images(fake)
+                show_tensor_images(real)
+                mean_generator_loss = 0
+                mean_discriminator_loss = 0
+            cur_step += 1
+
 
     
 
