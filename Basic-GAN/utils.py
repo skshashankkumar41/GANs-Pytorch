@@ -24,7 +24,7 @@ def show_tensor_images(image_tensor, num_images=25, size=(1, 28, 28),tensorboard
         return None
 
 def tensorboard_writer(img_grid,epoch,step,gen_image=True,path='logs/basic_gan'):
-    img_name = 'gen_epoch_{}_step_{}.format(epoch,step)' if gen_image else 'real_epoch_{}_step_{}'.format(epoch,step)
+    img_name = 'gen_epoch_{}_step_{}'.format(epoch,step) if gen_image else 'real_epoch_{}_step_{}'.format(epoch,step)
     writer = SummaryWriter(path)
     writer.add_image(img_name, img_grid)
     return None
