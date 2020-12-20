@@ -107,6 +107,9 @@ def train(n_epochs=200,batch_size=128,lr=0.00001,z_dim=64,hidden_dim=128):
                 mean_discriminator_loss = 0
             cur_step += 1
 
+
+train()
+
         
 
 
