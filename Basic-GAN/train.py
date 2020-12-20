@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 import torch.nn as nn
 from generator import Generator
 from discriminator import Discriminator
-from utils import noise_generator,show_tensor_images    
+from utils import noise_generator,show_tensor_images,tensorboard_writer    
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -98,11 +98,15 @@ def train(n_epochs=200,batch_size=128,lr=0.00001,z_dim=64,hidden_dim=128):
                 print(f"Epoch {epoch}, step {cur_step}: Generator loss: {mean_generator_loss}, discriminator loss: {mean_discriminator_loss}")
                 fake_noise = noise_generator(cur_batch_size, z_dim)
                 fake = generator(fake_noise)
-                show_tensor_images(fake)
-                show_tensor_images(real)
+                generated_image_grid = show_tensor_images(fake,tensorboard_writer=True)
+                tensorboard_writer(generated_image_grid,epoch,cur_step,gen_image=True)
+                real_image_grid = show_tensor_images(real,tensorboard_writer=True)
+                tensorboard_writer(real_image_grid,epoch,cur_step,gen_image=False)
                 mean_generator_loss = 0
                 mean_discriminator_loss = 0
             cur_step += 1
+
+        
 
 
     
